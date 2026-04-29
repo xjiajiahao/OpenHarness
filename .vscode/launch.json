@@ -1,0 +1,78 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "OpenHarness: React TUI + Attach backend",
+      "configurations": [
+        "OpenHarness: React TUI frontend (backend waits on :5678)",
+        "OpenHarness: Attach backend (:5678)"
+      ],
+      "stopAll": true
+    }
+  ],
+  "configurations": [
+    {
+      "name": "OpenHarness: React TUI frontend (backend waits on :5678)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "if [ ! -d node_modules ]; then npm install --no-fund --no-audit; fi; npm run start",
+      "cwd": "${workspaceFolder}/frontend/terminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "OPENHARNESS_API_FORMAT": "copilot",
+        "OPENHARNESS_FRONTEND_CONFIG": "{\"backend_command\":[\"uv\",\"run\",\"--with\",\"debugpy\",\"python\",\"-Xfrozen_modules=off\",\"-m\",\"debugpy\",\"--listen\",\"5678\",\"--wait-for-client\",\"-m\",\"openharness\",\"--backend-only\",\"--cwd\",\"${workspaceFolder}\",\"--debug\",\"--permission-mode\",\"full_auto\"],\"theme\":\"default\"}"
+      }
+    },
+    {
+      "name": "OpenHarness: Attach backend (:5678)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "127.0.0.1",
+        "port": 5678
+      },
+      "justMyCode": false
+    },
+    {
+      "name": "OpenHarness: Agent Loop (--print)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "openharness",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "OPENHARNESS_API_FORMAT": "copilot"
+      },
+      "args": [
+        "--debug",
+        "--permission-mode",
+        "full_auto",
+        "--max-turns",
+        "8",
+        "--print",
+        "请简要解释当前仓库里 agent loop 的入口与执行流程"
+      ]
+    },
+    {
+      "name": "OpenHarness: Agent Loop (task worker)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "openharness",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "OPENHARNESS_API_FORMAT": "copilot"
+      },
+      "args": [
+        "--debug",
+        "--permission-mode",
+        "full_auto",
+        "--task-worker"
+      ]
+    }
+  ]
+}
