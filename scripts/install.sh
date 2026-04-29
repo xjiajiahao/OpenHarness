@@ -127,22 +127,31 @@ fi
 PY_VERSION=$("$PYTHON_CMD" --version 2>&1)
 success "Found ${PY_VERSION} (${PYTHON_CMD})"
 
-# Determine pip command
-PIP_CMD=""
-for cmd in pip3 pip; do
-    if command -v "$cmd" &>/dev/null; then
-        PIP_CMD="$cmd"
-        break
-    fi
-done
-
-if [ -z "$PIP_CMD" ]; then
-    # Try python -m pip
-    if "$PYTHON_CMD" -m pip --version &>/dev/null 2>&1; then
-        PIP_CMD="$PYTHON_CMD -m pip"
+# Determine uv command
+UV_CMD=""
+if command -v uv &>/dev/null; then
+    UV_CMD="uv"
+    success "Found uv $(uv --version 2>&1)"
+else
+    info "uv not found, installing..."
+    if curl -fsSL https://install.astral.sh/uv | sh; then
+        # uv installs to ~/.local/bin/uv by default
+        if command -v uv &>/dev/null; then
+            UV_CMD="uv"
+        elif [ -x "$HOME/.local/bin/uv" ]; then
+            UV_CMD="$HOME/.local/bin/uv"
+            export PATH="$HOME/.local/bin:$PATH"
+        else
+            error "Failed to install uv."
+            echo "  Please install uv manually:"
+            echo "    curl -fsSL https://install.astral.sh/uv | sh"
+            exit 1
+        fi
+        success "uv installed"
     else
-        error "pip not found. Please install pip:"
-        echo "    $PYTHON_CMD -m ensurepip --upgrade"
+        error "Failed to download uv installer."
+        echo "  Please install uv manually:"
+        echo "    curl -fsSL https://install.astral.sh/uv | sh"
         exit 1
     fi
 fi
@@ -198,13 +207,12 @@ fi
 
 if [ ! -f "$VENV_DIR/bin/activate" ]; then
     info "Creating virtual environment at ${VENV_DIR}..."
-    "$PYTHON_CMD" -m venv "$VENV_DIR"
+    "$UV_CMD" venv "$VENV_DIR"
 fi
 
 # Activate the venv — all pip installs go here
 source "$VENV_DIR/bin/activate"
 PYTHON_CMD="python"
-PIP_CMD="pip"
 success "Virtual environment ready: ${VENV_DIR}"
 
 if [ "$FROM_SOURCE" = true ]; then
@@ -228,11 +236,11 @@ if [ "$FROM_SOURCE" = true ]; then
         exit 1
     fi
 
-    info "Installing in editable mode (pip install -e .)..."
-    $PIP_CMD install -e "$INSTALL_DIR" --quiet
+    info "Installing in editable mode (uv pip install -e)..."
+    $UV_CMD pip install -e "$INSTALL_DIR" --quiet
 else
-    info "Mode: pip install openharness-ai"
-    $PIP_CMD install openharness-ai --quiet --upgrade
+    info "Mode: uv pip install openharness-ai"
+    $UV_CMD pip install openharness-ai --quiet --upgrade
 fi
 
 success "OpenHarness package installed"
