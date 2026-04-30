@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "OpenHarness: React TUI frontend (backend waits on :5678)",
+      "type": "shell",
+      "isBackground": true,
+      "command": "if [ ! -d node_modules ]; then npm install --no-fund --no-audit; fi; npm run start",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend/terminal",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src",
+          "OPENHARNESS_API_FORMAT": "copilot",
+          "OPENHARNESS_FRONTEND_CONFIG": "{\"backend_command\":[\"uv\",\"run\",\"--with\",\"debugpy\",\"python\",\"-Xfrozen_modules=off\",\"-m\",\"debugpy\",\"--listen\",\"5678\",\"--wait-for-client\",\"-m\",\"openharness\",\"--backend-only\",\"--cwd\",\"${workspaceFolder}\",\"--debug\",\"--permission-mode\",\"full_auto\"],\"theme\":\"default\"}"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [
+        {
+          "owner": "openharness-frontend",
+          "pattern": {
+            "regexp": "^.*$"
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*$",
+            "endsPattern": "Connecting to backend\\.\\.\\."
+          }
+        }
+      ]
+    },
+  ]
+}
